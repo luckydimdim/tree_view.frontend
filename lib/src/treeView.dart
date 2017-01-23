@@ -3,6 +3,7 @@ library kendoTreeView;
 
 import 'package:js/js.dart';
 import 'package:resources_loader/resources_loader.dart';
+import 'package:js/js_util.dart';
 
 @anonymous
 @JS()
@@ -47,16 +48,43 @@ class _KendoTreeView {
   external _KendoTreeView(String query, TreeViewOptions options);
 }
 
+class Item {
+
+  String text;
+  List<Item> items;
+
+  Item(this.text, {List<Item> this.items}){
+
+    if (this.items == null)
+      this.items = new  List<Item>();
+
+  }
+
+  dynamic getJsObject(){
+    var obj = newObject();
+    List<dynamic> jsList = new  List<dynamic>();
+    setProperty(obj, "text", text);
+
+    items.forEach((i){
+      var jsItem = i.getJsObject();
+      jsList.add(jsItem);
+    });
+
+
+    setProperty(obj, "items", jsList);
+
+    return obj;
+  }
+}
+
 class TreeView {
-  ResourcesLoaderService _resourcesLoader;
 
-  TreeView(this._resourcesLoader, String query, TreeViewOptions options) {
-
+  static void loadResources( ResourcesLoaderService _resourcesLoader, {onData(), onError(error), onDone()}){
     bool minification = false;
 
     if (_resourcesLoader != null) {
       _resourcesLoader.loadStyle(
-          'packages/tree_view/src/', 'kendo.common.min.css');
+          'packages/tree_view/src/', 'kendo.common-bootstrap.min.css');
       _resourcesLoader.loadStyle(
           'packages/tree_view/src/', 'kendo.bootstrap.min.css');
 
@@ -80,14 +108,15 @@ class TreeView {
       _resourcesLoader.loadScript(
           'packages/tree_view/src/',
           'kendo.treeview' + (minification ? '.min' : '') + '.js', false,
-          onData: () => _init(query, options));
+          onData: onData);
     }
-else {
-      _init(query, options);
-    }
+
   }
 
-  void _init(String query, TreeViewOptions options){
+  TreeView(String query, TreeViewOptions options) {
+
     new _KendoTreeView(query, options);
   }
+
+
 }
